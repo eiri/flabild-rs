@@ -1,0 +1,29 @@
+[tools]
+pkl = "latest"
+rust = "latest"
+hk = "latest"
+
+[tasks.default]
+description = "Run `run` task"
+depends = ["run"]
+
+[tasks.run]
+description = "Run the CLI"
+run = "cargo run"
+
+[tasks.test]
+description = "Test the code"
+run = "cargo test"
+
+[tasks.lint]
+description = "Lint the code"
+run = "hk check"
+
+[tasks.build]
+description = "Build the CLI"
+run = "cargo build"
+
+[tasks.flabild]
+description = "Run the built binary"
+run = "target/debug/flabild"
+depends = ["build"]
