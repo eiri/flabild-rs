@@ -9,7 +9,7 @@ depends = ["run"]
 
 [tasks.run]
 description = "Run the CLI"
-run = "cargo run"
+run = "cargo run -- -n 2"
 
 [tasks.test]
 description = "Test the code"
