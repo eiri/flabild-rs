@@ -14,18 +14,18 @@ This is [Markov chain](https://en.wikipedia.org/wiki/Markov_chain) based generat
 
 ```bash
 $ flabild -n 12
-an
-stlentanes
-pose
-ser
-mer
-ble
-in
-aallingioldwidly
-dianta
-obbly
-mirt
-cometal
+cachs
+sper
+canung
+orrictoch
+speguered
+guing
+ricariflumpats
+thouse
+berpal
+pa
+ousnessisobberandisopht
+rograchitencele
 ```
 
 ## Dev tools
