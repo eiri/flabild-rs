@@ -11,6 +11,17 @@ depends = ["run"]
 description = "Run the CLI"
 run = "cargo run -- -n 2"
 
+[tasks.english-txt]
+description = "Download english dictionary"
+run = "wget -nc https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt -O english.txt || exit 0"
+sources = ["english.txt"]
+
+[tasks.generate]
+description = "Generate pairs distribution"
+run = "cargo run --bin generator -- english.txt src/pairs.rs"
+outputs = ["src/pairs.rs"]
+depends = ["english-txt"]
+
 [tasks.test]
 description = "Test the code"
 run = "cargo test"
@@ -22,6 +33,8 @@ run = "hk check"
 [tasks.build]
 description = "Build the CLI"
 run = "cargo build"
+sources = ["Cargo.toml", "src/**/*.rs"]
+outputs = ["target/debug/flabild"]
 
 [tasks.flabild]
 description = "Run the built binary"
