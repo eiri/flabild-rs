@@ -1,14 +1,12 @@
 amends "package://github.com/jdx/hk/releases/download/v1.36.0/hk@1.36.0#/Config.pkl"
 import "package://github.com/jdx/hk/releases/download/v1.36.0/hk@1.36.0#/Builtins.pkl"
 
-profiles = List("ci", "full")
-
 local linters = new Mapping<String, Step> {
     ["cargo_fmt"] = Builtins.cargo_fmt
     ["cargo_clippy"] = Builtins.cargo_clippy
     ["cargo_check"] = (Builtins.cargo_check) {
       // Only run in CI or with "full" profile
-      profiles = List("ci", "full")
+      profiles = List("ci")
     }
 }
 
