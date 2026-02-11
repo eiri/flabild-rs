@@ -9,9 +9,11 @@ pub const CHARS: [char; 28] = [
     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '|',
 ];
 
-type Pair = [char; 2];
+pub type Pair = [char; 2];
 
-pub type PairMap = HashMap<Pair, [u32; 28]>;
+pub type Weights = [u32; 28];
+
+pub type PairMap = HashMap<Pair, Weights>;
 
 #[derive(Debug)]
 pub enum FlabildError {

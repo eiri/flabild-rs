@@ -1,3 +1,4 @@
+use std::collections::BTreeMap;
 use std::{
     env,
     error::Error,
@@ -6,7 +7,7 @@ use std::{
     process,
 };
 
-use flabild::{CHARS, PairMap};
+use flabild::{CHARS, Pair, Weights};
 
 type Triplet = [char; 3];
 
@@ -53,10 +54,10 @@ fn main() {
         process::exit(1);
     });
 
-    writeln!(out, "use std::collections::HashMap;\n").unwrap();
+    writeln!(out, "use crate::PairMap;\n").unwrap();
     writeln!(
         out,
-        "pub fn build_choices_map() -> HashMap<[char; 2], [u32; 28]> {{\nHashMap::from(["
+        "pub fn build_choices_map() -> PairMap {{\nPairMap::from(["
     )
     .unwrap();
     for (pair, weights) in reduce_map {
@@ -65,7 +66,7 @@ fn main() {
     writeln!(out, "])\n}}").unwrap();
 }
 
-fn generate_map(config: &Config) -> Result<PairMap, Box<dyn Error>> {
+fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>, Box<dyn Error>> {
     let words = fs::read_to_string(&config.dict_path)?;
 
     // Map
@@ -81,7 +82,7 @@ fn generate_map(config: &Config) -> Result<PairMap, Box<dyn Error>> {
     }
 
     // Reduce
-    let mut reduce_map = PairMap::new();
+    let mut reduce_map = BTreeMap::new();
     for triplet in map_sink {
         let pair = [triplet[0], triplet[1]];
         let idx = CHARS.iter().position(|&c| c == triplet[2]).unwrap();
