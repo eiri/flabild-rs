@@ -19,12 +19,20 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("not enough arguments");
-        }
-        let dict_path = args[1].clone();
-        let out_path = args[2].clone();
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        // drop script name
+        args.next();
+
+        let dict_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("missing path to the dictionary"),
+        };
+
+        let out_path = match args.next() {
+            Some(arg) => arg,
+            None => return Err("missing path to the output file"),
+        };
+
         Ok(Config {
             dict_path,
             out_path,
@@ -33,9 +41,7 @@ impl Config {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-
-    let config = Config::build(&args).unwrap_or_else(|e| {
+    let config = Config::build(env::args()).unwrap_or_else(|e| {
         eprintln!("can't parse arguments: {e}");
         process::exit(1);
     });
