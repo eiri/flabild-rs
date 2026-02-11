@@ -4,12 +4,11 @@ rust = "latest"
 hk = "latest"
 
 [tasks.default]
-description = "Run `run` task"
-depends = ["run"]
-
-[tasks.run]
 description = "Run the CLI"
-run = "cargo run -- -n 2"
+usage = '''
+flag "-n --number <number>" help="Number of words to generate" default="2"
+'''
+run = "cargo run -- -n ${usage_number?}"
 
 [tasks.english-txt]
 description = "Download english dictionary"
