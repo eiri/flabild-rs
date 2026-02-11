@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use weighted_rand::builder::*;
 
-mod pairs;
+mod choices;
 
 pub const CHARS: [char; 28] = [
     '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
@@ -13,7 +13,7 @@ pub type Pair = [char; 2];
 
 pub type Weights = [u32; 28];
 
-pub type PairMap = HashMap<Pair, Weights>;
+pub type Choices = HashMap<Pair, Weights>;
 
 #[derive(Debug)]
 pub enum FlabildError {
@@ -32,7 +32,7 @@ impl std::error::Error for FlabildError {}
 
 #[derive(Debug)]
 pub struct Chooser {
-    choices: PairMap,
+    choices: Choices,
 }
 
 impl Default for Chooser {
@@ -43,7 +43,7 @@ impl Default for Chooser {
 
 impl Chooser {
     pub fn new() -> Chooser {
-        let choices = pairs::build_choices_map();
+        let choices = choices::build_choices();
         Chooser { choices }
     }
 

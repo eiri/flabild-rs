@@ -1,7 +1,7 @@
-use crate::PairMap;
+use crate::Choices;
 
-pub fn build_choices_map() -> PairMap {
-    PairMap::from([
+pub fn build_choices() -> Choices {
+    Choices::from([
         (
             ['_', '_'],
             [
