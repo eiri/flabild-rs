@@ -45,7 +45,7 @@ fn main() {
     });
 
     let reduce_map = generate_map(&config).unwrap_or_else(|e| {
-        eprintln!("can't generate pairs: {e}");
+        eprintln!("can't generate weights: {e}");
         process::exit(1);
     });
 
@@ -54,12 +54,8 @@ fn main() {
         process::exit(1);
     });
 
-    writeln!(out, "use crate::PairMap;\n").unwrap();
-    writeln!(
-        out,
-        "pub fn build_choices_map() -> PairMap {{\nPairMap::from(["
-    )
-    .unwrap();
+    writeln!(out, "use crate::Choices;\n").unwrap();
+    writeln!(out, "pub fn build_choices() -> Choices {{\nChoices::from([").unwrap();
     for (pair, weights) in reduce_map {
         writeln!(out, "({:?}, {:?}),", pair, weights).unwrap();
     }

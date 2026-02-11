@@ -16,9 +16,9 @@ run = "wget -nc https://raw.githubusercontent.com/dwyl/english-words/master/word
 sources = ["english.txt"]
 
 [tasks.generate]
-description = "Generate pairs distribution"
-run = "cargo run --bin generator -- english.txt src/pairs.rs"
-outputs = ["src/pairs.rs"]
+description = "Generate letters distribution"
+run = "cargo run --bin generator -- english.txt src/choices.rs"
+outputs = ["src/choices.rs"]
 depends = ["english-txt"]
 
 [tasks.test]
