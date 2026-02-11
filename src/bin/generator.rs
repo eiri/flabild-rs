@@ -1,15 +1,12 @@
-use std::collections::HashMap;
-use std::env;
-use std::error::Error;
-use std::fs;
-use std::fs::File;
-use std::io::Write;
-use std::process;
+use std::{
+    env,
+    error::Error,
+    fs::{self, File},
+    io::Write,
+    process,
+};
 
-const CHARS: [char; 28] = [
-    '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
-    's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '|',
-];
+use flabild::{CHARS, PairMap};
 
 type Triplet = [char; 3];
 
@@ -68,7 +65,7 @@ fn main() {
     writeln!(out, "])\n}}").unwrap();
 }
 
-fn generate_map(config: &Config) -> Result<HashMap<[char; 2], [u32; 28]>, Box<dyn Error>> {
+fn generate_map(config: &Config) -> Result<PairMap, Box<dyn Error>> {
     let words = fs::read_to_string(&config.dict_path)?;
 
     // Map
@@ -84,7 +81,7 @@ fn generate_map(config: &Config) -> Result<HashMap<[char; 2], [u32; 28]>, Box<dy
     }
 
     // Reduce
-    let mut reduce_map = HashMap::new();
+    let mut reduce_map = PairMap::new();
     for triplet in map_sink {
         let pair = [triplet[0], triplet[1]];
         let idx = CHARS.iter().position(|&c| c == triplet[2]).unwrap();
