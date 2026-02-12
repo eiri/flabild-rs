@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use anyhow::{Result, anyhow};
 use weighted_rand::builder::*;
 
 mod choices;
@@ -14,21 +15,6 @@ pub type Pair = [char; 2];
 pub type Weights = [u32; 28];
 
 pub type Choices = HashMap<Pair, Weights>;
-
-#[derive(Debug)]
-pub enum FlabildError {
-    NotFound,
-}
-
-impl std::fmt::Display for FlabildError {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
-        match self {
-            FlabildError::NotFound => write!(f, "pair not found"),
-        }
-    }
-}
-
-impl std::error::Error for FlabildError {}
 
 #[derive(Debug)]
 pub struct Chooser {
@@ -47,11 +33,14 @@ impl Chooser {
         Chooser { choices }
     }
 
-    pub fn word(&self) -> Result<String, FlabildError> {
+    pub fn word(&self) -> Result<String> {
         let mut word = String::new();
         let mut pair = ['_', '_'];
         loop {
-            let pair_weights = self.choices.get(&pair).ok_or(FlabildError::NotFound)?;
+            let pair_weights = self
+                .choices
+                .get(&pair)
+                .ok_or_else(|| anyhow!("pair not found"))?;
             let builder = WalkerTableBuilder::new(pair_weights);
             let wa_table = builder.build();
             let r = CHARS[wa_table.next()];

@@ -1,11 +1,12 @@
 use std::collections::BTreeMap;
 use std::{
     env,
-    error::Error,
     fs::{self, File},
     io::Write,
     process,
 };
+
+use anyhow::{Result, anyhow};
 
 use flabild::{CHARS, Pair, Weights};
 
@@ -17,19 +18,17 @@ struct Config {
 }
 
 impl Config {
-    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config> {
         // drop script name
         args.next();
 
-        let dict_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err("missing path to the dictionary"),
-        };
+        let dict_path = args
+            .next()
+            .ok_or_else(|| anyhow!("missing path to the dictionary"))?;
 
-        let out_path = match args.next() {
-            Some(arg) => arg,
-            None => return Err("missing path to the output file"),
-        };
+        let out_path = args
+            .next()
+            .ok_or_else(|| anyhow!("missing path to the output file"))?;
 
         Ok(Config {
             dict_path,
@@ -49,20 +48,13 @@ fn main() {
         process::exit(1);
     });
 
-    let mut out = File::create(config.out_path).unwrap_or_else(|e| {
-        eprintln!("can't create output file: {e}");
+    store_map(&config, reduce_map).unwrap_or_else(|e| {
+        eprintln!("can't store weights: {e}");
         process::exit(1);
-    });
-
-    writeln!(out, "use crate::Choices;\n").unwrap();
-    writeln!(out, "pub fn build_choices() -> Choices {{\nChoices::from([").unwrap();
-    for (pair, weights) in reduce_map {
-        writeln!(out, "({:?}, {:?}),", pair, weights).unwrap();
-    }
-    writeln!(out, "])\n}}").unwrap();
+    })
 }
 
-fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>, Box<dyn Error>> {
+fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>> {
     let words = fs::read_to_string(&config.dict_path)?;
 
     // Map
@@ -88,4 +80,17 @@ fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>, Box<dyn Erro
     }
 
     Ok(reduce_map)
+}
+
+fn store_map(config: &Config, reduce_map: BTreeMap<Pair, Weights>) -> Result<()> {
+    let mut out = File::create(&config.out_path)?;
+
+    writeln!(out, "use crate::Choices;\n")?;
+    writeln!(out, "pub fn build_choices() -> Choices {{\nChoices::from([")?;
+    for (pair, weights) in reduce_map {
+        writeln!(out, "({:?}, {:?}),", pair, weights)?;
+    }
+    writeln!(out, "])\n}}")?;
+
+    Ok(())
 }
