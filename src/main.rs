@@ -13,8 +13,7 @@ struct Args {
 fn main() {
     let args = Args::parse();
 
-    let mut chooser = Chooser::new();
-    let _ = chooser.from_file("src/choices.cbor");
+    let chooser = Chooser::new();
 
     for _ in 0..args.number {
         match chooser.word() {

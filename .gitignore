@@ -1,2 +1,3 @@
 /target
 english.txt
+src/**/*.cbor

@@ -3,6 +3,10 @@ pkl = "latest"
 rust = "latest"
 hk = "latest"
 
+[vars]
+english_file = 'english.txt'
+weights_file = 'src/weights.cbor'
+
 [tasks.default]
 description = "Run the CLI"
 usage = '''
@@ -12,14 +16,19 @@ run = "cargo run -- -n ${usage_number?}"
 
 [tasks.english-txt]
 description = "Download english dictionary"
-run = "wget -nc https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt -O english.txt || exit 0"
-sources = ["english.txt"]
+run = "wget -nc https://raw.githubusercontent.com/dwyl/english-words/master/words_alpha.txt -O {{ vars.english_file }} || exit 0"
+sources = ["{{ vars.english_file }}"]
+
+[tasks.empty-weights]
+description = "Create empty weights file if missing"
+run = "[ -f {{ vars.weights_file }} ] || touch {{ vars.weights_file }} || true "
+outputs = ["{{ vars.weights_file }}"]
 
 [tasks.generate]
 description = "Generate letters distribution"
-run = "cargo run --bin generator -- english.txt src/choices.cbor"
-outputs = ["src/choices.cbor"]
-depends = ["english-txt"]
+run = "cargo run --bin generator -- {{ vars.english_file }} {{ vars.weights_file }}"
+outputs = ["{{ vars.weights_file }}"]
+depends = ["english-txt", "empty-weights"]
 
 [tasks.test]
 description = "Test the code"
