@@ -1,14 +1,8 @@
-use std::collections::BTreeMap;
-use std::{
-    env,
-    fs::{self, File},
-    io::Write,
-    process,
-};
+use std::{env, fs, process};
 
 use anyhow::{Result, anyhow};
 
-use flabild::{CHARS, Pair, Weights};
+use flabild::{CHARS, Choices};
 
 type Triplet = [char; 3];
 
@@ -48,13 +42,13 @@ fn main() {
         process::exit(1);
     });
 
-    store_map(&config, reduce_map).unwrap_or_else(|e| {
+    store_map(&config, &reduce_map).unwrap_or_else(|e| {
         eprintln!("can't store weights: {e}");
         process::exit(1);
     })
 }
 
-fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>> {
+fn generate_map(config: &Config) -> Result<Choices> {
     let words = fs::read_to_string(&config.dict_path)?;
 
     // Map
@@ -70,7 +64,7 @@ fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>> {
     }
 
     // Reduce
-    let mut reduce_map = BTreeMap::new();
+    let mut reduce_map = Choices::new();
     for triplet in map_sink {
         let pair = [triplet[0], triplet[1]];
         let idx = CHARS.iter().position(|&c| c == triplet[2]).unwrap();
@@ -82,15 +76,11 @@ fn generate_map(config: &Config) -> Result<BTreeMap<Pair, Weights>> {
     Ok(reduce_map)
 }
 
-fn store_map(config: &Config, reduce_map: BTreeMap<Pair, Weights>) -> Result<()> {
-    let mut out = File::create(&config.out_path)?;
+fn store_map(config: &Config, choices: &Choices) -> Result<()> {
+    let path = &config.out_path;
 
-    writeln!(out, "use crate::Choices;\n")?;
-    writeln!(out, "pub fn build_choices() -> Choices {{\nChoices::from([")?;
-    for (pair, weights) in reduce_map {
-        writeln!(out, "({:?}, {:?}),", pair, weights)?;
-    }
-    writeln!(out, "])\n}}")?;
+    let bytes = serde_cbor::to_vec(choices)?;
+    fs::write(path, bytes)?;
 
     Ok(())
 }

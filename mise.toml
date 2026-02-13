@@ -17,8 +17,8 @@ sources = ["english.txt"]
 
 [tasks.generate]
 description = "Generate letters distribution"
-run = "cargo run --bin generator -- english.txt src/choices.rs"
-outputs = ["src/choices.rs"]
+run = "cargo run --bin generator -- english.txt src/choices.cbor"
+outputs = ["src/choices.cbor"]
 depends = ["english-txt"]
 
 [tasks.test]
