@@ -1,10 +1,9 @@
 use std::{env, fs, process};
 
 use anyhow::{Result, anyhow};
+use rayon::prelude::*;
 
 use flabild::{CHARS, Choices};
-
-type Triplet = [char; 3];
 
 struct Config {
     dict_path: String,
@@ -51,27 +50,30 @@ fn main() {
 fn generate_map(config: &Config) -> Result<Choices> {
     let words = fs::read_to_string(&config.dict_path)?;
 
-    // Map
-    let mut map_sink: Vec<Triplet> = Vec::new();
-    for word in words.lines() {
-        let mut triplet = ['_', '_', '_'];
-        for letter in word.chars().chain(std::iter::once('|')) {
-            triplet[0] = triplet[1];
-            triplet[1] = triplet[2];
-            triplet[2] = letter;
-            map_sink.push(triplet);
-        }
-    }
+    let reduce_map = words
+        .par_lines()
+        .fold(Choices::new, |mut acc, word| {
+            let mut triplet = ['_', '_', '_'];
+            for letter in word.chars().chain(std::iter::once('|')) {
+                triplet[0] = triplet[1];
+                triplet[1] = triplet[2];
+                triplet[2] = letter;
 
-    // Reduce
-    let mut reduce_map = Choices::new();
-    for triplet in map_sink {
-        let pair = [triplet[0], triplet[1]];
-        let idx = CHARS.iter().position(|&c| c == triplet[2]).unwrap();
-
-        let weights = reduce_map.entry(pair).or_insert([0u32; 28]);
-        weights[idx] += 1;
-    }
+                let pair = [triplet[0], triplet[1]];
+                let idx = CHARS.iter().position(|&c| c == triplet[2]).unwrap();
+                acc.entry(pair).or_insert([0u32; 28])[idx] += 1;
+            }
+            acc
+        })
+        .reduce(Choices::new, |mut acc, other| {
+            for (pair, weights) in other {
+                let weights_acc = acc.entry(pair).or_insert([0u32; 28]);
+                for (i, &count) in weights.iter().enumerate() {
+                    weights_acc[i] += count;
+                }
+            }
+            acc
+        });
 
     Ok(reduce_map)
 }
