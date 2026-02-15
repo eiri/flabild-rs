@@ -101,10 +101,10 @@ jobs:
         id: release
         uses: cocogitto/cocogitto-action@v4
         with:
-          release: true
+          command: bump
+          args: --auto
           git-user: "github-actions[bot]"
           git-user-email: "github-actions[bot]@users.noreply.github.com"
-          check: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
