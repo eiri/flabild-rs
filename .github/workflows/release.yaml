@@ -28,44 +28,20 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  # Check conventional commits on PR
-  check-commits:
-    name: Check Conventional Commits
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Check conventional commits
-        uses: cocogitto/cocogitto-action@v4
-        with:
-          command: check
-          args: --from-latest-tag
-
-  # Create release
   release:
     name: Create Release
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
     outputs:
       version: ${{ steps.release.outputs.version }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Install mise
-        uses: jdx/mise-action@v3
-        with:
-          cache_key: "mise-{{platform}}-{{version}}-{{file_hash}}"
-          version: "2026.2.11"
-
+      - name: Install cargo-edit for version bumping
+        run: cargo install cargo-edit --locked
       - name: Cache Rust dependencies
         uses: actions/cache@v5
         with:
@@ -78,15 +54,6 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
           restore-keys: |
             ${{ runner.os }}-cargo-
-
-      - name: Install cargo-edit for version bumping
-        run: cargo install cargo-edit
-
-      - name: Configure Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Determine version increment
         id: increment
         run: |
@@ -96,18 +63,16 @@ jobs:
             INCREMENT="auto"
           fi
           echo "increment=$INCREMENT" >> $GITHUB_OUTPUT
-
       - name: Create release
         id: release
         uses: cocogitto/cocogitto-action@v4
         with:
           command: bump
-          args: --auto
+          args: --${{ steps.increment.outputs.increment }}
           git-user: "github-actions[bot]"
           git-user-email: "github-actions[bot]@users.noreply.github.com"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Generate changelog for release
         id: changelog
         if: steps.release.outputs.version != ''
@@ -115,7 +80,6 @@ jobs:
         with:
           command: changelog
           args: --at ${{ steps.release.outputs.version }}
-
       - name: Upload release assets
         if: steps.release.outputs.version != ''
         uses: softprops/action-gh-release@v2
@@ -125,7 +89,6 @@ jobs:
           files: |
             target/release/flabild
           token: ${{ secrets.GITHUB_TOKEN }}
-
       - name: Summary
         if: steps.release.outputs.version != ''
         run: |
@@ -136,7 +99,6 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### Changelog" >> $GITHUB_STEP_SUMMARY
           echo "${{ steps.changelog.outputs.stdout }}" >> $GITHUB_STEP_SUMMARY
-
       - name: No release needed
         if: steps.release.outputs.version == ''
         run: |
