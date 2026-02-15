@@ -1,5 +1,8 @@
 # flabild
 [![CI Status](https://github.com/eiri/flabild-rs/actions/workflows/ci.yaml/badge.svg)](https://github.com/eiri/flabild-rs/actions/workflows/ci.yaml)
+[![Crates.io](https://img.shields.io/crates/v/flabild.svg)](https://crates.io/crates/flabild)
+[![Documentation](https://docs.rs/flabild/badge.svg)](https://docs.rs/flabild)
+[![License](https://img.shields.io/crates/l/flabild.svg)](https://github.com/eiri/flabild#license)
 
 Generator of fake pronounceable words. Port of https://github.com/eiri/flabild
 
