@@ -1,0 +1,146 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_increment:
+        description: "Version increment type"
+        required: false
+        type: choice
+        options:
+          - auto
+          - major
+          - minor
+          - patch
+        default: "auto"
+  push:
+    branches: ["main"]
+    paths-ignore:
+      - "CHANGELOG.md"
+      - "**.md"
+      - ".github/**"
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  # Check conventional commits on PR
+  check-commits:
+    name: Check Conventional Commits
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check conventional commits
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: check
+          args: --from-latest-tag
+
+  # Create release
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install mise
+        uses: jdx/mise-action@v3
+        with:
+          cache_key: "mise-{{platform}}-{{version}}-{{file_hash}}"
+          version: "2026.2.11"
+
+      - name: Cache Rust dependencies
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-
+
+      - name: Install cargo-edit for version bumping
+        run: cargo install cargo-edit
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Determine version increment
+        id: increment
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            INCREMENT="${{ inputs.version_increment }}"
+          else
+            INCREMENT="auto"
+          fi
+          echo "increment=$INCREMENT" >> $GITHUB_OUTPUT
+
+      - name: Create release
+        id: release
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          release: true
+          git-user: "github-actions[bot]"
+          git-user-email: "github-actions[bot]@users.noreply.github.com"
+          check: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Generate changelog for release
+        id: changelog
+        if: steps.release.outputs.version != ''
+        uses: cocogitto/cocogitto-action@v4
+        with:
+          command: changelog
+          args: --at ${{ steps.release.outputs.version }}
+
+      - name: Upload release assets
+        if: steps.release.outputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.release.outputs.version }}
+          body: ${{ steps.changelog.outputs.stdout }}
+          files: |
+            target/release/flabild
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Summary
+        if: steps.release.outputs.version != ''
+        run: |
+          echo "## Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ steps.release.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Tag:** \`${{ steps.release.outputs.version }}\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Changelog" >> $GITHUB_STEP_SUMMARY
+          echo "${{ steps.changelog.outputs.stdout }}" >> $GITHUB_STEP_SUMMARY
+
+      - name: No release needed
+        if: steps.release.outputs.version == ''
+        run: |
+          echo "## No Release Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "No conventional commits found that require a version bump." >> $GITHUB_STEP_SUMMARY
+          echo "Commits must include feat:, fix:, or BREAKING CHANGE: to trigger a release." >> $GITHUB_STEP_SUMMARY
