@@ -40,11 +40,11 @@ run = "hk check"
 
 [tasks.build]
 description = "Build the CLI"
-run = "cargo build"
+run = "cargo build --release"
 sources = ["Cargo.toml", "src/**/*.rs"]
-outputs = ["target/debug/flabild"]
+outputs = ["target/release/flabild"]
 
 [tasks.flabild]
 description = "Run the built binary"
-run = "target/debug/flabild"
+run = "target/release/flabild"
 depends = ["build"]
