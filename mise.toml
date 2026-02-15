@@ -5,7 +5,7 @@ hk = "latest"
 
 [vars]
 english_file = 'english.txt'
-weights_file = 'src/weights.cbor'
+weights_file = 'src/data/weights.cbor'
 
 [tasks.default]
 description = "Run the CLI"

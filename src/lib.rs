@@ -8,7 +8,7 @@ pub const CHARS: [char; 28] = [
     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '|',
 ];
 
-const WEIGHTS: &[u8] = include_bytes!("weights.cbor");
+const WEIGHTS: &[u8] = include_bytes!("data/weights.cbor");
 
 pub type Pair = [char; 2];
 
