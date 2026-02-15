@@ -1,21 +1,29 @@
 use std::collections::HashMap;
 
-use anyhow::{Result, anyhow};
+use anyhow::{Context, Result, anyhow};
 use weighted_rand::builder::*;
 
+/// Available characters in the alphabet, including word boundary markers.
 pub const CHARS: [char; 28] = [
     '_', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r',
     's', 't', 'u', 'v', 'w', 'x', 'y', 'z', '|',
 ];
 
 const WEIGHTS: &[u8] = include_bytes!("data/weights.cbor");
+const ALPHABET_SIZE: usize = CHARS.len();
+const INITIAL_PAIR: Pair = ['_', '_'];
+const TERMINATOR: char = '|';
 
+/// A character pair used as a Markov chain state.
 pub type Pair = [char; 2];
 
-pub type Weights = [u32; 28];
+/// Probability weights for each character in the alphabet.
+pub type Weights = [u32; ALPHABET_SIZE];
 
+/// Maps character pairs to their successor probability distributions.
 pub type Choices = HashMap<Pair, Weights>;
 
+/// A fake words generator.
 #[derive(Debug)]
 pub struct Chooser {
     choices: Choices,
@@ -28,30 +36,47 @@ impl Default for Chooser {
 }
 
 impl Chooser {
+    /// Creates a Chooser from embedded weighs. Panics if weights are invalid.
     pub fn new() -> Chooser {
-        let choices = serde_cbor::from_slice(WEIGHTS).unwrap();
-        Chooser { choices }
+        Self::try_new().expect("Failed to initialize Chooser")
     }
 
+    /// Attempts to create a Chooser from embedded weighs.
+    pub fn try_new() -> Result<Self> {
+        let choices: Choices = serde_cbor::from_slice(WEIGHTS)
+            .context("Failed to deserialize character pair weights")?;
+        Ok(Chooser { choices })
+    }
+
+    /// Generates a random fake word.
+    ///
+    /// Returns an error if weights are missing for a pair or generation exceeds max length.
     pub fn word(&self) -> Result<String> {
-        let mut word = String::new();
-        let mut pair = ['_', '_'];
-        loop {
+        const MAX_WORD_LENGTH: usize = 80; // Should be long enough
+
+        let mut word = String::with_capacity(16); // Again, should be long enough
+        let mut pair = INITIAL_PAIR;
+
+        for _ in 0..MAX_WORD_LENGTH {
             let pair_weights = self
                 .choices
                 .get(&pair)
-                .ok_or_else(|| anyhow!("pair not found"))?;
-            let builder = WalkerTableBuilder::new(pair_weights);
-            let wa_table = builder.build();
-            let r = CHARS[wa_table.next()];
-            if r == '|' {
-                break;
+                .with_context(|| format!("Missing weights for pair: {:?}", pair))?;
+
+            let wa_table = WalkerTableBuilder::new(pair_weights).build();
+            let next_char = CHARS[wa_table.next()];
+            if next_char == TERMINATOR {
+                return Ok(word);
             }
-            word.push(r);
-            pair[0] = pair[1];
-            pair[1] = r;
+
+            word.push(next_char);
+            pair = [pair[1], next_char];
         }
-        Ok(word)
+
+        Err(anyhow!(
+            "Word generation exceeded maximum length of {}",
+            MAX_WORD_LENGTH
+        ))
     }
 }
 
