@@ -2,11 +2,51 @@
 name = "flabild"
 version = "0.1.0"
 edition = "2024"
+authors = ["Eric Avdey <eiri@eiri.ca>"]
+license = "MIT"
+description = "A fast Markov chain-based fake word generator that produces pronounceable pseudo-words"
+documentation = "https://docs.rs/flabild"
+homepage = "https://github.com/eiri/flabild-rs"
+repository = "https://github.com/eiri/flabild-rs"
+readme = "README.md"
+keywords = ["generator", "fake", "words", "markov", "random"]
+categories = ["text-processing", "algorithms", "command-line-utilities"]
+rust-version = "1.93"
+exclude = [".github/", "src/bin/", "mise.toml", "cog.toml", "hk.pkl", ".gitignore"]
 default-run = "flabild"
 
+[lib]
+name = "flabild"
+path = "src/lib.rs"
+
+[[bin]]
+name = "flabild"
+path = "src/main.rs"
+required-features = ["cli"]
+
 [dependencies]
-anyhow = "1.0.101"
-clap = { version = "4.5.57", features = ["derive"] }
-serde_cbor = "0.11.2"
-weighted_rand = "0.4.2"
-rayon = "1.11.0"
+anyhow = "1.0"
+serde_cbor = "0.11"
+weighted_rand = "0.4"
+
+# Optional dependencies for CLI and generator
+clap = { version = "4.5.57", features = ["derive"], optional = true }
+rayon = { version = "1.11.0", optional = true }
+
+[features]
+default = ["cli"]
+cli = ["dep:clap", "dep:rayon"]
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true
+
+[profile.dev]
+opt-level = 0
+debug = true
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
