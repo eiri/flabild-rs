@@ -30,8 +30,8 @@ serde_cbor = "0.11"
 weighted_rand = "0.4"
 
 # Optional dependencies for CLI and generator
-clap = { version = "4.5.57", features = ["derive"], optional = true }
-rayon = { version = "1.11.0", optional = true }
+clap = { version = "4.6.7", features = ["derive"], optional = true }
+rayon = { version = "1.12.0", optional = true }
 
 [features]
 default = ["cli"]
