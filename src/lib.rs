@@ -404,7 +404,7 @@ mod tests {
         for _ in 0..20 {
             let word = chooser.word().unwrap();
             assert!(
-                word.len() > 0 && word.len() < 100,
+                !word.is_empty() && word.len() < 100,
                 "Word length should be reasonable, got: {}",
                 word.len()
             );
