@@ -12,7 +12,7 @@ readme = "README.md"
 keywords = ["generator", "fake", "words", "markov", "random"]
 categories = ["text-processing", "algorithms", "command-line-utilities"]
 rust-version = "1.93"
-exclude = [".github/", "src/bin/", "mise.toml", "cog.toml", "hk.pkl", ".gitignore"]
+exclude = [".github/", "src/bin/", "mise.toml", "release-please-config.json", ".release-please-manifest.json", "hk.pkl", ".gitignore"]
 default-run = "flabild"
 
 [lib]
