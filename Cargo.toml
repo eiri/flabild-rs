@@ -24,6 +24,11 @@ name = "flabild"
 path = "src/main.rs"
 required-features = ["cli"]
 
+[[bin]]
+name = "generator"
+path = "src/bin/generator.rs"
+required-features = ["cli"]
+
 [dependencies]
 anyhow = "1.0"
 serde_cbor = "0.11"
